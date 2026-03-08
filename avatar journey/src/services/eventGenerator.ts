@@ -18,9 +18,15 @@ export const startJourney = async (
   travelStyles: any[]
 ): Promise<{ newEvent: TravelEvent; travelState: TravelState }> => {
   try {
+    const currentTime = new Date().toISOString();
     const prompt = `
 你是一个虚拟旅行游戏的AI助手，负责为用户的虚拟角色生成真实的旅行体验。
 ${SYSTEM_STYLE_INSTRUCTION}
+
+时空设定与强制要求：
+- 现在的真实世界 UTC 时间是：${currentTime}。
+- 请根据目的地（${character.destination}）的时区，推算出当地的真实时间。
+- 剧情必须严格符合当地昼夜规律（如：凌晨应在休息或夜生活中，不该出现太阳；中午则在活动等）。
 
 角色设定：
 - 姓名：${character.name}
@@ -37,10 +43,10 @@ ${SYSTEM_STYLE_INSTRUCTION}
 {
   "currentLocation": "出发地及具体场景",
   "currentActivity": "正在进行的初始动作",
-  "eventDescription": "出发时的平实记录（200字左右）",
+  "eventDescription": "出发时的平实记录，请在描写中自然体现出当下的时间感（200字左右）",
   "hasMoved": true,
   "locationCoords": { "lat": 12.5684, "lng": 99.9577 },
-  "nextEventTime": "下次更新所需小时数（0.5-2之间）",
+  "nextEventTime": "下次更新所需小时数（请设定在 3 - 6 之间，以节约API成本）",
   "needsUserInput": false
 }
 `;
@@ -90,9 +96,15 @@ export const generateNextEvent = async (
   try {
     const recentEvents = events.slice(-5).map(e => `[${e.timestamp}] ${e.content}`).join('\n');
 
+    const currentTime = new Date().toISOString();
     const prompt = `
 继续${character.name}的旅行故事。
 ${SYSTEM_STYLE_INSTRUCTION}
+
+时空设定与强制要求：
+- 现在的真实世界 UTC 时间是：${currentTime}。
+- 请自行计算当前所在地（${travelState.currentLocation} 或 ${character.destination}）的当地时间。
+- 事件描述必须高度匹配当地的昼夜与作息规律（夜晚就是夜晚，白天就是白天）。
 
 路线背景：
 - 出发地：${character.departureLocation}
@@ -117,10 +129,10 @@ ${recentEvents}
 {
   "currentLocation": "更新后的位置",
   "currentActivity": "正在做的事情",
-  "eventDescription": "事件平实记录（200字左右）",
+  "eventDescription": "事件平实记录，包含时间感的时间描写（200字左右）",
   "hasMoved": false,
   "locationCoords": { "lat": 12.5, "lng": 99.9 },
-  "nextEventTime": "下次事件预计时间（小时后）",
+  "nextEventTime": "下次事件预计时间（请设定在 3 - 6 小时之间，减少高频打扰）",
   "needsUserInput": false,
   "statChanges": {
     "joy": 0,
@@ -177,10 +189,15 @@ export const processUserMessage = async (
   try {
 
     const recentEvents = events.slice(-3).map(e => e.content).join('\n');
+    const currentTime = new Date().toISOString();
     const prompt = `
 ${character.name}正在旅行中。目前路线是从 ${character.departureLocation} 前往 ${character.destination}。
 用户下达干预指令："${userMessage}"
 ${SYSTEM_STYLE_INSTRUCTION}
+
+时空感知：
+- 现在的真实世界 UTC 时间是：${currentTime}。
+- 请推算角色的当地时间并确保动作符合物理作息。
 
 当前环境上下文：
 - 位置：${travelState.currentLocation}
@@ -193,10 +210,10 @@ ${SYSTEM_STYLE_INSTRUCTION}
 {
   "currentLocation": "可能更新的位置",
   "currentActivity": "根据指令调整的活动",
-  "eventDescription": "角色的反应及行动记录（200字左右）",
+  "eventDescription": "角色的反应及行动记录，融合当地时间刻画（200字左右）",
   "hasMoved": false,
   "locationCoords": { "lat": 12.5, "lng": 99.9 },
-  "nextEventTime": "下次自动事件的时间（小时后）",
+  "nextEventTime": "下次自动事件的时间（3 - 6小时后）",
   "statChanges": {
     "joy": 1,
     "experience": 1

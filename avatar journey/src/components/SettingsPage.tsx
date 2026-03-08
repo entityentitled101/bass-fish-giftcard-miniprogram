@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, RefreshCw, Download, Upload, ShieldAlert } from 'lucide-react';
+import { Settings, RefreshCw, Download, Upload, ShieldAlert, Edit3 } from 'lucide-react';
 import { ApiConfig } from '../types';
 import { setApiConfig, getApiConfig } from '../services/apiService';
 import { exportAllData, importData } from '../services/storageService';
@@ -10,7 +10,7 @@ interface SettingsPageProps {
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ resetAllData }) => {
   const [apiConfig, setApiConfigState] = useState<ApiConfig>(getApiConfig());
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [isEditingKey, setIsEditingKey] = useState(false);
 
   useEffect(() => {
     setApiConfigState(getApiConfig());
@@ -18,6 +18,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ resetAllData }) => {
 
   const handleSaveApiConfig = () => {
     setApiConfig(apiConfig);
+    setIsEditingKey(false);
     alert('配置已同步。');
   };
 
@@ -64,6 +65,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ resetAllData }) => {
     }
   };
 
+  const startEditing = () => {
+    setIsEditingKey(true);
+    setApiConfigState(prev => ({ ...prev, apiKey: '' })); // 清空以重新填写
+  };
+
   return (
     <div className="page-container space-y-6 pb-20">
       <div className="card">
@@ -80,37 +86,52 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ resetAllData }) => {
               onChange={(e) => setApiConfigState(prev => ({ ...prev, provider: e.target.value as ApiConfig['provider'] }))}
               className="input-brutalist bg-white"
             >
-              <option value="doubao">豆包 (Recommended)</option>
-              <option value="claude">Claude API</option>
-              <option value="zhipu">智谱 GLM</option>
+              <option value="gemini">Google Gemini (Recommended)</option>
+              <option value="doubao">字节跳动 豆包</option>
+              <option value="claude">Anthropic Claude</option>
             </select>
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="label-small">API Access Key</label>
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="text-[10px] font-black uppercase underline opacity-40 hover:opacity-100"
-              >
-                {showApiKey ? 'Hide' : 'Show'}
-              </button>
+              {!isEditingKey && apiConfig.apiKey && (
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  className="flex items-center gap-1 text-[10px] font-black uppercase underline opacity-40 hover:opacity-100"
+                >
+                  <Edit3 size={10} /> Edit / 重填
+                </button>
+              )}
             </div>
-            <input
-              type={showApiKey ? 'text' : 'password'}
-              value={apiConfig.apiKey}
-              onChange={(e) => setApiConfigState(prev => ({ ...prev, apiKey: e.target.value }))}
-              className="input-brutalist"
-              placeholder="输入密钥以激活系统"
-            />
+            <div className="relative">
+              <input
+                type="password"
+                value={isEditingKey ? apiConfig.apiKey : (apiConfig.apiKey ? '********' : '')}
+                onChange={(e) => isEditingKey && setApiConfigState(prev => ({ ...prev, apiKey: e.target.value }))}
+                readOnly={!isEditingKey}
+                onClick={() => !isEditingKey && startEditing()}
+                className={`input-brutalist ${!isEditingKey ? 'cursor-pointer opacity-60' : ''}`}
+                placeholder={isEditingKey ? "粘贴新的 API 密钥..." : "未配置密钥"}
+              />
+              {!isEditingKey && apiConfig.apiKey && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-green-600 uppercase">
+                  Key Saved / 已安全存储
+                </div>
+              )}
+            </div>
+            <p className="mt-2 text-[9px] text-gray-400 leading-tight">
+              * 为确保安全，密钥已进行脱敏处理且不可找回。如需更换，请点击重填。
+            </p>
           </div>
 
           <button
             onClick={handleSaveApiConfig}
-            className="btn-black py-4 text-xs tracking-widest"
+            className="btn-black py-4 text-xs tracking-widest disabled:opacity-50"
+            disabled={isEditingKey && !apiConfig.apiKey}
           >
-            更新核心配置 / UPDATE CONFIG
+            更新状态并重连 / UPDATE & RECONNECT
           </button>
         </div>
       </div>

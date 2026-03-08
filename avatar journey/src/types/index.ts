@@ -172,7 +172,7 @@ export interface AppState {
 }
 
 // API提供商类型
-export type ApiProvider = 'doubao' | 'claude' | 'zhipu';
+export type ApiProvider = 'doubao' | 'claude' | 'gemini';
 
 // API配置类型
 export interface ApiConfig {

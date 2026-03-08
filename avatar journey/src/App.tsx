@@ -154,6 +154,21 @@ const App: React.FC = () => {
     return () => { if (nextEventTimer !== null) clearTimeout(nextEventTimer); };
   }, []);
 
+  // 5分钟巡检：检查是否到达下一次事件的时间点 (自主动作模式)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (travelState.isActive && travelState.nextEventTime && !isWaitingResponse) {
+        const now = new Date();
+        const nextTime = new Date(travelState.nextEventTime);
+        if (now >= nextTime) {
+          console.log('巡检发现到达预定更新点，触发自主更新...');
+          generateNextEvent();
+        }
+      }
+    }, 1000 * 60 * 5); // 5分钟巡检一次
+    return () => clearInterval(interval);
+  }, [travelState.isActive, travelState.nextEventTime, isWaitingResponse]);
+
   // 自动监测日期变化，生成日记 (每小时检查一次)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -162,14 +177,12 @@ const App: React.FC = () => {
         const yestStr = formatDate(new Date(now.getTime() - 24 * 60 * 60 * 1000));
 
         if (!diaries.some(d => d.date === yestStr)) {
-          // 检查前一天是否有事件
           captureDiary(yestStr, events, character);
         }
       }
-    }, 1000 * 60 * 60); // 每小时
+    }, 1000 * 60 * 60);
     return () => clearInterval(interval);
-  }, [travelState.isActive, diaries, events, character]);
-
+  }, [travelState.isActive, diaries.length, events.length]);
   const resultNextHours = (nextTime: Date) => {
     const hours = (new Date(nextTime).getTime() - Date.now()) / (3600 * 1000);
     return Math.max(0, hours);
@@ -315,7 +328,7 @@ const App: React.FC = () => {
       <section className="intro-side">
         <h1 className="main-title">AVATAR<br />JOURNEY</h1>
         <p className="intro-text">
-          欢迎来到虚拟旅行体验。在这里，生活不仅仅是发生，而是被豆包 AI 精准捕捉的平实瞬间。这是一场关于距离、时间和偶然性的平行生活实验。
+          欢迎来到这个安静的角落。在这里，生活不再只是枯燥的日程，而是一场关于相遇、直觉与风息的漫长告白。化身会在你忙碌或睡去时，于万里之外的真实纬度上替你前行，捕捉那些被日常漏掉的细碎诗意。这是一场跨越时区的平行生活实验，献给每一个渴望远方的灵魂。
         </p>
         <div className="space-y-4">
           <div className="feature-box">

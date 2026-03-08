@@ -131,24 +131,34 @@ const TravelingPage: React.FC<TravelingPageProps> = ({
           ) : (
             <div className="space-y-12">
               {events.map((event) => (
-                <div key={event.id} className="relative group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-[9px] font-black bg-black text-white px-2 py-0.5 uppercase tracking-tighter">
+                <div key={event.id} className={`relative flex flex-col ${event.type === 'user_intervention' ? 'items-end' : 'items-start'}`}>
+                  {/* 时间标记线 */}
+                  <div className="w-full flex items-center gap-3 mb-2 opacity-30">
+                    <span className="text-[8px] font-black uppercase tracking-tighter">
                       {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    <span className="h-[1px] flex-1 bg-gray-200"></span>
-                    {event.type === 'user_intervention' && (
-                      <span className="text-[8px] font-black uppercase border border-black px-1">Intervention</span>
+                    <span className="h-[1px] flex-1 bg-black"></span>
+                  </div>
+
+                  {/* 消息主体 */}
+                  <div className={`
+                    max-w-[90%] p-4 text-sm leading-relaxed border-2 border-black mb-1 transition-all
+                    ${event.type === 'user_intervention'
+                      ? 'bg-black text-white rounded-l-xl rounded-tr-sm shadow-[-4px_4px_0px_#ddd]'
+                      : 'bg-white text-black rounded-r-xl rounded-tl-sm shadow-[4px_4px_0px_#ddd]'}
+                  `}>
+                    {event.userMessage && (
+                      <div className="mb-2 pb-2 border-b border-gray-600 text-[10px] uppercase font-black opacity-60">
+                        CMD: {event.userMessage}
+                      </div>
                     )}
+                    <span className="font-bold">{event.content}</span>
                   </div>
-                  <div className={`text-sm font-bold leading-relaxed whitespace-pre-wrap ${event.type === 'user_intervention' ? 'pl-4 border-l-4 border-black italic text-gray-500' : 'text-gray-800'}`}>
-                    {event.content}
-                  </div>
-                  {event.userMessage && (
-                    <div className="mt-3 text-[10px] bg-gray-50 p-2 border border-black border-dashed font-black opacity-60">
-                      用户干预指令: {event.userMessage}
-                    </div>
-                  )}
+
+                  {/* 类型标识符 */}
+                  <span className="text-[8px] font-900 mt-1 uppercase opacity-40">
+                    {event.type === 'user_intervention' ? 'Command Executed' : 'Signal Received'}
+                  </span>
                 </div>
               ))}
               <div className="h-20 flex items-center justify-center">

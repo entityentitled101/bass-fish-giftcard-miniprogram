@@ -14,21 +14,30 @@ let currentApiConfig: ApiConfig = DEFAULT_API_CONFIG;
 export const getApiConfig = (): ApiConfig => {
   // 1. 尝试从 localStorage 读取手动配置的配置项
   const savedConfig = localStorage.getItem('avatarJourneyApiConfig');
+
+  // 2. 强力纠偏逻辑：只要本地存储的是旧版 provider，无论是否有密钥，全部强制重置为 Gemini 默认通道
   if (savedConfig) {
     try {
       const parsed = JSON.parse(savedConfig);
-      // 如果手动配置了 apiKey 且不为空，则优先使用
-      if (parsed.apiKey && parsed.apiKey.trim() !== '') {
+      const isLegacyProvider = parsed.provider === 'zhipu' || parsed.provider === 'doubao';
+
+      if (isLegacyProvider) {
+        parsed.provider = 'gemini';
+        // 如果环境变量有 Key，则清空手动 Key 以便使用环境变量
+        if (import.meta.env.VITE_GEMINI_API_KEY) {
+          parsed.apiKey = '';
+        }
+        localStorage.setItem('avatarJourneyApiConfig', JSON.stringify(parsed));
         return parsed;
       }
-    } catch (error) {
-      console.error('解析API配置失败:', error);
-    }
+
+      return parsed;
+    } catch (e) { }
   }
 
-  // 2. 如果没有手动配置或 apiKey 为空，返回包含环境变量的默认配置
+  // 3. 终极兜底：无任何手动配置时，始终默认开启 Gemini 通道
   return {
-    ...DEFAULT_API_CONFIG,
+    provider: 'gemini',
     apiKey: import.meta.env.VITE_GEMINI_API_KEY || ''
   };
 };
@@ -48,7 +57,7 @@ const callGeminiAPI = async (prompt: string, expectJSON: boolean = false): Promi
 
     // 使用 Gemini 1.5 Flash 模型，性能好且稳定
     const model = "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -215,15 +224,5 @@ export const callAIAPI = async (prompt: string, expectJSON: boolean = false): Pr
 
 // 初始化API配置
 export const initializeApiConfig = (): void => {
-  const savedConfig = localStorage.getItem('avatarJourneyApiConfig');
-  if (savedConfig) {
-    try {
-      currentApiConfig = JSON.parse(savedConfig);
-    } catch (error) {
-      console.error('初始化API配置失败:', error);
-      currentApiConfig = DEFAULT_API_CONFIG;
-    }
-  } else {
-    currentApiConfig = DEFAULT_API_CONFIG;
-  }
+  currentApiConfig = getApiConfig();
 };

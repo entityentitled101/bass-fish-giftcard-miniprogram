@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
-import { BookOpen, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Character, Diary } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { BookOpen, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Map as MapIcon } from 'lucide-react';
+import { Character, Diary, TravelEvent } from '../types';
 
 interface DiaryPageProps {
   character: Character;
   diaries: Diary[];
+  events: TravelEvent[];
 }
 
-const DiaryPage: React.FC<DiaryPageProps> = ({ diaries }) => {
+declare const L: any;
+
+const DiaryPage: React.FC<DiaryPageProps> = ({ diaries, events }) => {
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(
     diaries.length > 0 ? diaries[diaries.length - 1].date : new Date().toISOString().split('T')[0]
   );
+
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<any>(null);
 
   const viewMonth = viewDate.getMonth();
   const viewYear = viewDate.getFullYear();
@@ -32,6 +38,67 @@ const DiaryPage: React.FC<DiaryPageProps> = ({ diaries }) => {
   }, {} as Record<string, Diary>);
 
   const selectedDiary = diaryEntries[selectedDate];
+
+  // 渲染当日地图
+  useEffect(() => {
+    if (!selectedDiary || !mapContainerRef.current || typeof L === 'undefined') return;
+
+    if (leafletMapRef.current) {
+      leafletMapRef.current.remove();
+      leafletMapRef.current = null;
+    }
+
+    // 过滤当日带坐标的事件
+    const dayPoints = events
+      .filter(e => {
+        const eDate = e.timestamp instanceof Date ? e.timestamp.toISOString().split('T')[0] : String(e.timestamp).split('T')[0];
+        return eDate === selectedDate && e.locationCoords;
+      })
+      .map(e => [e.locationCoords!.lat, e.locationCoords!.lng] as [number, number]);
+
+    if (dayPoints.length === 0) return;
+
+    const center = dayPoints[dayPoints.length - 1];
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: true,
+      attributionControl: false
+    }).setView(center, 14);
+
+    leafletMapRef.current = map;
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19
+    }).addTo(map);
+
+    // 绘制当日虚线轨迹
+    if (dayPoints.length > 1) {
+      L.polyline(dayPoints, {
+        color: 'black',
+        weight: 3,
+        opacity: 0.6,
+        dashArray: '5, 10'
+      }).addTo(map);
+    }
+
+    // 事件点标记
+    dayPoints.forEach((p, idx) => {
+      L.circleMarker(p, {
+        radius: idx === dayPoints.length - 1 ? 6 : 4,
+        fillColor: idx === dayPoints.length - 1 ? "black" : "#666",
+        color: "white",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 1
+      }).addTo(map);
+    });
+
+    return () => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [selectedDate, selectedDiary, events.length]);
 
   return (
     <div className="page-container space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4">
@@ -112,7 +179,7 @@ const DiaryPage: React.FC<DiaryPageProps> = ({ diaries }) => {
               </p>
 
               {selectedDiary.keyEvents && (
-                <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-dashed border-gray-100">
+                <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-dashed border-gray-100 mb-6">
                   {selectedDiary.keyEvents.map((tag, idx) => (
                     <span key={idx} className="text-[9px] font-black uppercase bg-gray-100 border border-black px-2 py-0.5">
                       #{tag}
@@ -120,6 +187,18 @@ const DiaryPage: React.FC<DiaryPageProps> = ({ diaries }) => {
                   ))}
                 </div>
               )}
+
+              {/* 当日轨迹地图 */}
+              <div className="border-4 border-black relative overflow-hidden">
+                <div className="absolute top-2 left-2 z-[1000] bg-black text-white px-2 py-0.5 font-black text-[8px] uppercase tracking-tighter shadow-[2px_2px_0px_white] flex items-center gap-1">
+                  <MapIcon size={10} /> DAY_TRAJECTORY
+                </div>
+                <div
+                  ref={mapContainerRef}
+                  className="w-full h-48 bg-gray-50"
+                  style={{ filter: 'grayscale(100%) brightness(0.9)' }}
+                />
+              </div>
             </div>
           </div>
         </div>

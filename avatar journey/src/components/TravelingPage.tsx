@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { MapPin, Activity, Send, BookOpen, Download } from 'lucide-react';
+import { MapPin, Activity, Send, BookOpen, Download, Trash2 } from 'lucide-react';
 import { Character, TravelState, TravelEvent } from '../types';
 
 interface TravelingPageProps {
@@ -11,6 +11,7 @@ interface TravelingPageProps {
   sendUserMessage: () => void;
   isWaitingResponse: boolean;
   generateDailyDiary: () => void;
+  deleteEvent: (id: number) => void;
 }
 
 const TravelingPage: React.FC<TravelingPageProps> = ({
@@ -20,7 +21,8 @@ const TravelingPage: React.FC<TravelingPageProps> = ({
   setUserMessage,
   sendUserMessage,
   isWaitingResponse,
-  generateDailyDiary
+  generateDailyDiary,
+  deleteEvent
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +56,14 @@ const TravelingPage: React.FC<TravelingPageProps> = ({
           <div className="flex items-start gap-3">
             <MapPin className="text-black mt-1" size={20} />
             <div className="flex-1">
-              <div className="label-small">当前坐标 (Location)</div>
+              <div className="label-small flex justify-between items-center">
+                <span>当前坐标 (Location)</span>
+                {travelState.lastUpdate && (
+                  <span className="text-[10px] text-gray-400 normal-case font-bold">
+                    {new Date(travelState.lastUpdate).toLocaleString()}
+                  </span>
+                )}
+              </div>
               <div className="font-black text-lg leading-tight">{travelState.currentLocation || '信号搜索中...'}</div>
               {travelState.specificLocation && (
                 <div className="text-[10px] font-bold uppercase text-gray-400 mt-1 flex items-center gap-1">
@@ -142,11 +151,19 @@ const TravelingPage: React.FC<TravelingPageProps> = ({
 
                   {/* 消息主体 */}
                   <div className={`
-                    max-w-[90%] p-4 text-sm leading-relaxed border-2 border-black mb-1 transition-all
+                    max-w-[100%] p-4 text-sm leading-relaxed border-2 border-black mb-1 transition-all relative group/msg
                     ${event.type === 'user_intervention'
                       ? 'bg-black text-white rounded-l-xl rounded-tr-sm shadow-[-4px_4px_0px_#ddd]'
                       : 'bg-white text-black rounded-r-xl rounded-tl-sm shadow-[4px_4px_0px_#ddd]'}
                   `}>
+                    {/* 删除按钮 */}
+                    <button
+                      onClick={() => deleteEvent(event.id)}
+                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white border-2 border-black rounded shadow-[2px_2px_0px_black] opacity-0 group-hover/msg:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+
                     {event.userMessage && (
                       <div className="mb-2 pb-2 border-b border-gray-600 text-[10px] uppercase font-black opacity-60">
                         CMD: {event.userMessage}

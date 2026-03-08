@@ -39,6 +39,7 @@ const App: React.FC = () => {
   const [socialContacts, setSocialContacts] = useState<SocialContact[]>([]);
   const [userMessage, setUserMessage] = useState<string>('');
   const [isWaitingResponse, setIsWaitingResponse] = useState<boolean>(false);
+  const [isAppLoaded, setIsAppLoaded] = useState<boolean>(false);
 
   // 预设选项
   const popularLocations: PopularLocation[] = [
@@ -101,6 +102,8 @@ const App: React.FC = () => {
       if (loadedDiaries) setDiaries(loadedDiaries);
       if (loadedWardrobe) setWardrobe(loadedWardrobe);
       if (loadedContacts) setSocialContacts(loadedContacts);
+
+      setIsAppLoaded(true);
 
       if (loadedState && loadedState.isActive) {
         setCurrentPage('traveling');
@@ -193,11 +196,11 @@ const App: React.FC = () => {
   };
 
   // 自动存储
-  useEffect(() => { if (character.name) asyncSave(saveCharacter, character); }, [character]);
-  useEffect(() => { if (travelState.isActive !== undefined) asyncSave(saveTravelState, travelState); }, [travelState]);
-  useEffect(() => { if (events.length > 0) asyncSave(saveEvents, events); }, [events]);
-  useEffect(() => { if (diaries.length > 0) asyncSave(saveDiaries, diaries); }, [diaries]);
-  useEffect(() => { if (wardrobe) asyncSave(saveWardrobe, wardrobe); }, [wardrobe]);
+  useEffect(() => { if (isAppLoaded && character.name) asyncSave(saveCharacter, character); }, [character, isAppLoaded]);
+  useEffect(() => { if (isAppLoaded && travelState.isActive !== undefined) asyncSave(saveTravelState, travelState); }, [travelState, isAppLoaded]);
+  useEffect(() => { if (isAppLoaded && events.length > 0) asyncSave(saveEvents, events); }, [events, isAppLoaded]);
+  useEffect(() => { if (isAppLoaded && diaries.length > 0) asyncSave(saveDiaries, diaries); }, [diaries, isAppLoaded]);
+  useEffect(() => { if (isAppLoaded && wardrobe) asyncSave(saveWardrobe, wardrobe); }, [wardrobe, isAppLoaded]);
 
   // 开始旅行
   const startJourney = async () => {
@@ -253,7 +256,7 @@ const App: React.FC = () => {
     if (!userMessage.trim() || isWaitingResponse) return;
     setIsWaitingResponse(true);
     try {
-      const { newEvent, updatedTravelState } = await processUserMessageService(character, travelState, userMessage);
+      const { newEvent, updatedTravelState } = await processUserMessageService(character, travelState, userMessage, events);
       setEvents(prev => [...prev, newEvent]);
       setTravelState(updatedTravelState);
       setUserMessage('');
@@ -290,6 +293,19 @@ const App: React.FC = () => {
     localStorage.removeItem('hua_hin_migrated_version');
   };
 
+  const deleteEvent = async (id: number) => {
+    const updatedEvents = events.filter(e => e.id !== id);
+    setEvents(updatedEvents);
+    await saveEvents(updatedEvents);
+    // 如果删除的是最后一个，更新状态
+    if (updatedEvents.length > 0) {
+      const last = updatedEvents[updatedEvents.length - 1];
+      setTravelState(prev => ({
+        ...prev,
+        lastUpdate: last.timestamp
+      }));
+    }
+  };
   const renderMobileNav = () => (
     <nav className="nav-bar">
       <div className={`nav-item ${currentPage === 'setup' ? 'active' : ''}`} onClick={() => setCurrentPage('setup')}>
@@ -381,10 +397,11 @@ const App: React.FC = () => {
                   sendUserMessage={sendUserMessage}
                   isWaitingResponse={isWaitingResponse}
                   generateDailyDiary={generateDailyDiaryManual}
+                  deleteEvent={deleteEvent}
                 />
               )}
-              {currentPage === 'stats' && <StatsPage travelState={travelState} />}
-              {currentPage === 'diary' && <DiaryPage character={character} diaries={diaries} />}
+              {currentPage === 'stats' && <StatsPage travelState={travelState} events={events} />}
+              {currentPage === 'diary' && <DiaryPage character={character} diaries={diaries} events={events} />}
               {currentPage === 'wardrobe' && <WardrobePage wardrobe={wardrobe} />}
               {currentPage === 'social' && <SocialPage contacts={socialContacts} />}
               {currentPage === 'settings' && <SettingsPage resetAllData={resetAllData} />}

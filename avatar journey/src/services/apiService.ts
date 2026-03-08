@@ -55,9 +55,9 @@ const callGeminiAPI = async (prompt: string, expectJSON: boolean = false): Promi
     const config = getApiConfig();
     const apiKey = config.apiKey || import.meta.env.VITE_GEMINI_API_KEY;
 
-    // 使用 Gemini 1.5 Flash 模型，性能好且稳定
-    const model = "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+    // 使用最新的 Gemini 3 Flash Preview 模型
+    const model = "gemini-3-flash-preview";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',

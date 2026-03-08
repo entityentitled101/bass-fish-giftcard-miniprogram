@@ -100,6 +100,11 @@ export interface SocialContact {
   archived?: boolean;
 }
 
+export interface LocationCoords {
+  lat: number;
+  lng: number;
+}
+
 // 旅行状态类型
 export interface TravelState {
   isActive: boolean;
@@ -108,6 +113,7 @@ export interface TravelState {
   currentActivity: string;
   lastUpdate: Date | null;
   nextEventTime: Date | null;
+  locationCoords?: LocationCoords;
   stats: {
     joy: number;
     experience: number;
@@ -129,6 +135,7 @@ export interface TravelEvent {
   content: string;
   needsUserInput: boolean;
   userMessage?: string;
+  locationCoords?: LocationCoords;
 }
 
 // 日记类型
@@ -192,8 +199,10 @@ export interface AIEventResponse {
   currentLocation: string;
   currentActivity: string;
   eventDescription: string;
+  hasMoved?: boolean;
   nextEventTime: number;
   needsUserInput: boolean;
+  locationCoords?: LocationCoords;
   statChanges?: {
     joy?: number;
     experience?: number;

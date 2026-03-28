@@ -1,0 +1,52 @@
+<view class="container">
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!hasCard}}">
+    <view class="empty-icon">
+      <text>🎁</text>
+    </view>
+    <text class="title">还没有礼品卡</text>
+    <text class="desc">快去首页领取你的专属礼品卡</text>
+    <button class="btn-claim" bindtap="goToClaim">去领取</button>
+  </view>
+
+  <!-- 有卡片 -->
+  <view class="card-detail" wx:if="{{hasCard}}">
+    <!-- 横向卡片展示 - 显示背面 -->
+    <view class="card-display">
+      <image src="/images/2.png" mode="aspectFit" class="card-img"/>
+    </view>
+
+    <!-- 兑奖码信息 -->
+    <view class="code-section">
+      <text class="label">兑奖码</text>
+      <view class="code-box" bindtap="copyCode">
+        <text class="code">{{cardInfo.code}}</text>
+        <text class="copy-hint">点击复制</text>
+      </view>
+    </view>
+
+    <!-- 卡片信息 -->
+    <view class="info-section">
+      <view class="info-item">
+        <text class="label">奖品</text>
+        <text class="value">绿佳元生态鲈鱼</text>
+      </view>
+      <view class="info-item">
+        <text class="label">状态</text>
+        <text class="status">未兑奖</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="actions">
+      <button class="btn-redeem" bindtap="goToRedeem">去兑奖</button>
+      <button class="btn-copy" bindtap="copyCode">复制兑奖码</button>
+      <button class="btn-share" open-type="share">分享给好友</button>
+    </view>
+
+    <!-- 提示 -->
+    <view class="tips">
+      <text>提示：请截图保存此页面，或复制兑奖码到兑奖网站使用</text>
+    </view>
+  </view>
+</view>

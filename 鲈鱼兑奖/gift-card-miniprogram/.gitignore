@@ -1,0 +1,29 @@
+# 敏感配置文件
+config.js
+.env
+
+# 微信开发者工具私有配置
+project.private.config.json
+
+# 依赖目录
+node_modules/
+miniprogram_npm/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 编辑器配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+temp/

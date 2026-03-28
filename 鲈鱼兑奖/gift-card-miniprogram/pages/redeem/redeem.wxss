@@ -1,0 +1,176 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
+  padding: 20px;
+}
+
+/* 成功状态 */
+.success-state {
+  text-align: center;
+  padding-top: 120px;
+}
+
+.success-icon {
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  border-radius: 50%;
+  background: #34c759;
+  margin: 0 auto 24px;
+  font-size: 48px;
+  color: #fff;
+}
+
+.success-title {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.success-desc {
+  display: block;
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 32px;
+  padding: 0 30px;
+}
+
+.btn-home {
+  width: 200px;
+  padding: 14px 0;
+  background: linear-gradient(135deg, #d4a853 0%, #e8c87a 100%);
+  color: #0a0a0a;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 兑奖表单 */
+.redeem-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 卡片信息 */
+.card-info {
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 24px;
+}
+
+.card-img {
+  width: 100%;
+  aspect-ratio: 16/10;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(212, 168, 83, 0.2);
+}
+
+.code-display {
+  text-align: center;
+  margin-top: 16px;
+  padding: 16px;
+  background: #1c1c1e;
+  border-radius: 12px;
+}
+
+.code-display .label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.code-display .code {
+  font-size: 22px;
+  font-weight: 700;
+  color: #d4a853;
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+/* 表单区域 */
+.form-section {
+  width: 100%;
+  max-width: 340px;
+  background: #1c1c1e;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.form-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-item .label {
+  display: block;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.form-item input,
+.form-item textarea {
+  width: 100%;
+  height: 46px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3c;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.form-item textarea {
+  height: 80px;
+  padding: 12px 14px;
+}
+
+.form-item input::placeholder,
+.form-item textarea::placeholder {
+  color: #666;
+}
+
+/* 提交按钮 */
+.btn-submit {
+  width: 100%;
+  max-width: 340px;
+  padding: 16px 0;
+  background: linear-gradient(135deg, #d4a853 0%, #e8c87a 100%);
+  color: #0a0a0a;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.btn-submit[disabled] {
+  opacity: 0.6;
+}
+
+/* 提示 */
+.tips {
+  text-align: center;
+  padding: 0 20px;
+}
+
+.tips text {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.8;
+}

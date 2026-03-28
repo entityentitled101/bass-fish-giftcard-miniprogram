@@ -1,0 +1,57 @@
+<view class="container">
+  <!-- 加载状态 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 已领取提示 -->
+  <view class="claimed-tip" wx:elif="{{hasClaimed}}">
+    <view class="icon">✓</view>
+    <text class="title">您已领取过礼品卡</text>
+    <text class="desc">每人限领一张</text>
+    <button class="btn-view" bindtap="goToMyCard">查看我的卡片</button>
+  </view>
+
+  <!-- 库存不足 -->
+  <view class="empty-tip" wx:elif="{{noStock}}">
+    <view class="icon">!</view>
+    <text class="title">礼品卡已领完</text>
+    <text class="desc">感谢您的关注，下次活动见</text>
+  </view>
+
+  <!-- 领取确认 -->
+  <view class="claim-form" wx:else>
+    <!-- 横向卡片展示 -->
+    <view class="card-preview">
+      <image src="/images/1.png" mode="aspectFit" class="card-img"/>
+    </view>
+
+    <view class="user-info" wx:if="{{userInfo}}">
+      <image src="{{userInfo.avatarUrl}}" class="avatar"/>
+      <text class="nickname">{{userInfo.nickName}}</text>
+    </view>
+
+    <view class="claim-info">
+      <text class="title">领取绿佳元生态鲈鱼礼品卡</text>
+      <text class="desc">• 每人限领一张</text>
+      <text class="desc">• 凭卡可兑换生态鲈鱼</text>
+      <text class="desc">• 客服微信：Lighten36</text>
+    </view>
+
+    <button 
+      class="btn-claim" 
+      bindtap="handleClaim"
+      disabled="{{claiming}}"
+    >
+      {{claiming ? '领取中...' : '确认领取'}}
+    </button>
+
+    <button 
+      class="btn-get-user" 
+      bindtap="getUserProfile"
+      wx:if="{{!userInfo}}"
+    >
+      授权微信信息
+    </button>
+  </view>
+</view>

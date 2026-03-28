@@ -1,0 +1,44 @@
+<view class="container">
+  <!-- 卡片展示区域 - 3D旋转 -->
+  <view class="card-stage">
+    <view class="card-wrapper {{isFlipped ? 'flipped' : ''}}">
+      <!-- 正面 -->
+      <view class="card-face card-front">
+        <image src="/images/1.png" mode="aspectFit" class="card-img"/>
+      </view>
+      <!-- 背面 -->
+      <view class="card-face card-back">
+        <image src="/images/2.png" mode="aspectFit" class="card-img"/>
+      </view>
+    </view>
+  </view>
+
+  <!-- 品牌名称 -->
+  <view class="brand">
+    <text class="brand-name">绿佳元生态鲈鱼</text>
+    <text class="brand-desc">来自大自然的美味馈赠</text>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="btn-primary" bindtap="goToClaim">领取礼品卡</button>
+    <button class="btn-secondary" bindtap="goToMyCard">我的礼品卡</button>
+  </view>
+
+  <!-- 活动说明 -->
+  <view class="info-section">
+    <view class="info-title">活动说明</view>
+    <view class="info-item">
+      <text class="dot">•</text>
+      <text class="text">每人限领一张礼品卡</text>
+    </view>
+    <view class="info-item">
+      <text class="dot">•</text>
+      <text class="text">凭卡可兑换生态鲈鱼一条</text>
+    </view>
+    <view class="info-item">
+      <text class="dot">•</text>
+      <text class="text">客服微信：Lighten36</text>
+    </view>
+  </view>
+</view>

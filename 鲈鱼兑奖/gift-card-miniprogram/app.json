@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/claim/claim",
+    "pages/my-card/my-card",
+    "pages/redeem/redeem"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#0a0a0a",
+    "navigationBarTitleText": "绿佳元生态鲈鱼",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#666",
+    "selectedColor": "#d4a853",
+    "backgroundColor": "#0a0a0a",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "礼品卡"
+      },
+      {
+        "pagePath": "pages/my-card/my-card",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

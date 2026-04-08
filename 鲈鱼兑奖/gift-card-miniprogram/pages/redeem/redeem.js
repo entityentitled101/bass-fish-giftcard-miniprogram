@@ -1,5 +1,5 @@
 // pages/redeem/redeem.js
-const { supabase, updateCardStatus, getCardByCode } = require('../../utils/api.js');
+const api = require('../../utils/api.js');
 const { writeToFeishu } = require('../../utils/feishu.js');
 
 Page({
@@ -25,7 +25,7 @@ Page({
   async checkCardStatus(code) {
     if (!code) return;
     try {
-      const card = await getCardByCode(code);
+      const card = await api.getCardByCode(code);
       if (card) {
         this.setData({ cardInfo: card });
         if (card.status === 'redeemed') {
@@ -84,37 +84,21 @@ Page({
         throw new Error('请先登录');
       }
 
-      // 1. 创建兑奖记录（带超时）
+      // 1. 创建兑奖记录
       console.log('开始创建兑奖记录...', { code, openid, name });
-      const insertPromise = supabase
-        .from('redeem_records')
-        .insert([{
-          card_code: code,
-          openid: openid,
-          recipient_name: name,
-          recipient_phone: phone,
-          recipient_address: address,
-          remark: remark || '',
-          redeemed_at: new Date().toISOString()
-        }]);
-      
-      // 8秒超时
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('请求超时，请检查网络')), 8000)
-      );
-      
-      const { error: redeemError } = await Promise.race([insertPromise, timeoutPromise]);
-
-      if (redeemError) {
-        console.error('Supabase 错误:', redeemError);
-        throw new Error(redeemError.message || '数据库写入失败');
-      }
-
+      await api.createRedeemRecord({
+        code,
+        openid,
+        name,
+        phone,
+        address,
+        remark
+      });
       console.log('兑奖记录创建成功');
 
       // 2. 更新卡片状态为已兑奖
       try {
-        await updateCardStatus(code, 'redeemed');
+        await api.updateCardStatus(code, 'redeemed', openid);
         console.log('卡片状态更新成功');
       } catch (updateErr) {
         console.error('更新卡片状态失败:', updateErr);

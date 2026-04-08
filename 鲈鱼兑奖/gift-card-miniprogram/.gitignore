@@ -1,9 +1,13 @@
-# 敏感配置文件
+# 敏感配置文件（包含真实 API Key、AppID 等）
 config.js
 .env
 
-# 微信开发者工具私有配置
+# 微信开发者工具私有配置（包含 AppID）
 project.private.config.json
+
+# 云函数本地依赖（会自动安装）
+cloudfunctions/*/node_modules/
+cloudfunctions/*/package-lock.json
 
 # 依赖目录
 node_modules/

@@ -4,38 +4,118 @@
     <text>加载中...</text>
   </view>
 
-  <!-- 已领取提示 -->
-  <view class="claimed-tip" wx:elif="{{hasClaimed}}">
-    <view class="icon">✓</view>
-    <text class="title">您已领取过礼品卡</text>
-    <text class="desc">每人限领一张</text>
-    <button class="btn-view" bindtap="goToMyCard">查看我的卡片</button>
-  </view>
-
   <!-- 库存不足 -->
   <view class="empty-tip" wx:elif="{{noStock}}">
     <view class="icon">!</view>
-    <text class="title">礼品卡已领完</text>
-    <text class="desc">感谢您的关注，下次活动见</text>
+    <text class="title">该礼品卡已被领取</text>
+    <text class="desc">请检查兑换码是否正确或联系客服</text>
   </view>
 
-  <!-- 领取确认 -->
+  <!-- 输入兑换码 -->
+  <view class="claim-form" wx:elif="{{!codeVerified}}">
+    <!-- 横向卡片展示 -->
+    <view class="card-preview">
+      <image src="/images/1.png" mode="aspectFit" class="card-img"/>
+    </view>
+
+    <view class="claim-info">
+      <text class="title">领取绿佳元生态鲈鱼礼品卡</text>
+      <text class="desc">请输入您的礼品卡兑换码</text>
+    </view>
+
+    <view class="input-section">
+      <input 
+        type="text" 
+        placeholder="请输入11位兑换码" 
+        maxlength="11"
+        value="{{inputCode}}"
+        bindinput="onCodeInput"
+        class="code-input"
+      />
+    </view>
+
+    <button 
+      class="btn-verify" 
+      bindtap="verifyCode"
+      disabled="{{verifying || !inputCode}}"
+    >
+      {{verifying ? '验证中...' : '验证兑换码'}}
+    </button>
+
+    <view class="tips">
+      <text>• 兑换码在礼品卡背面\n• 每张卡只能领取一次\n• 有问题请联系客服微信：Lighten36</text>
+    </view>
+  </view>
+
+  <!-- 验证通过，填写信息并领取 -->
+  <view class="claim-form" wx:elif="{{!userInfoFilled}}">
+    <!-- 横向卡片展示 -->
+    <view class="card-preview">
+      <image src="/images/1.png" mode="aspectFit" class="card-img"/>
+    </view>
+
+    <view class="code-info">
+      <text class="label">兑换码</text>
+      <text class="code">{{verifiedCode}}</text>
+      <text class="status">✓ 验证通过</text>
+    </view>
+
+    <view class="form-section">
+      <text class="form-title">请填写您的信息</text>
+      
+      <view class="form-item">
+        <text class="label">昵称</text>
+        <input 
+          type="nickname" 
+          placeholder="请输入昵称" 
+          value="{{nickname}}"
+          bindinput="onNicknameInput"
+          class="form-input"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="label">选择头像</text>
+        <button 
+          class="btn-choose-avatar" 
+          open-type="chooseAvatar"
+          bind:chooseavatar="onChooseAvatar"
+        >
+          <image wx:if="{{avatarUrl}}" src="{{avatarUrl}}" class="avatar-preview"/>
+          <text wx:else>点击选择头像</text>
+        </button>
+      </view>
+    </view>
+
+    <button 
+      class="btn-get-user" 
+      bindtap="submitUserInfo"
+      disabled="{{!nickname}}"
+    >
+      确认并领取
+    </button>
+  </view>
+
+  <!-- 已填写信息，确认领取 -->
   <view class="claim-form" wx:else>
     <!-- 横向卡片展示 -->
     <view class="card-preview">
       <image src="/images/1.png" mode="aspectFit" class="card-img"/>
     </view>
 
-    <view class="user-info" wx:if="{{userInfo}}">
-      <image src="{{userInfo.avatarUrl}}" class="avatar"/>
-      <text class="nickname">{{userInfo.nickName}}</text>
+    <view class="user-info">
+      <image src="{{avatarUrl}}" class="avatar"/>
+      <text class="nickname">{{nickname}}</text>
+    </view>
+
+    <view class="code-info">
+      <text class="label">兑换码</text>
+      <text class="code">{{verifiedCode}}</text>
     </view>
 
     <view class="claim-info">
-      <text class="title">领取绿佳元生态鲈鱼礼品卡</text>
-      <text class="desc">• 每人限领一张</text>
-      <text class="desc">• 凭卡可兑换生态鲈鱼</text>
-      <text class="desc">• 客服微信：Lighten36</text>
+      <text class="title">确认领取礼品卡</text>
+      <text class="desc">点击确认领取，卡片将绑定到您的微信</text>
     </view>
 
     <button 
@@ -44,14 +124,6 @@
       disabled="{{claiming}}"
     >
       {{claiming ? '领取中...' : '确认领取'}}
-    </button>
-
-    <button 
-      class="btn-get-user" 
-      bindtap="getUserProfile"
-      wx:if="{{!userInfo}}"
-    >
-      授权微信信息
     </button>
   </view>
 </view>

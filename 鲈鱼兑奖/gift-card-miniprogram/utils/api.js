@@ -1,130 +1,158 @@
-// API 配置文件
-const CONFIG = require('../config');
-
-// 通用请求方法
-const request = (options) => {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `${CONFIG.SUPABASE_URL}/rest/v1${options.url}`,
-      method: options.method || 'GET',
-      timeout: options.timeout || 10000, // 默认10秒超时
-      header: {
-        'apikey': CONFIG.SUPABASE_KEY,
-        'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        ...options.header
-      },
-      data: options.data,
-      success: (res) => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data);
-        } else {
-          console.error('API 错误:', res.statusCode, res.data);
-          reject({ 
-            message: res.data?.message || `请求失败 (${res.statusCode})`,
-            statusCode: res.statusCode,
-            data: res.data
-          });
-        }
-      },
-      fail: (err) => {
-        console.error('网络请求失败:', err);
-        reject({ message: '网络请求失败，请检查网络连接' });
-      }
-    });
-  });
-};
+// 腾讯云开发 API
+const db = wx.cloud.database();
 
 module.exports = {
   // 获取可用卡片列表
   getAvailableCards: () => {
-    return request({
-      url: '/gift_cards?status=eq.available&select=*',
-      method: 'GET'
-    });
+    return db.collection('gift_cards')
+      .where({ status: 'available' })
+      .get()
+      .then(res => res.data)
+      .catch(err => {
+        console.error('获取可用卡片失败:', err);
+        throw err;
+      });
   },
 
   // 检查用户是否已领取
   checkUserClaimed: (openid) => {
-    return request({
-      url: `/card_claims?openid=eq.${openid}&select=*`,
-      method: 'GET'
-    });
+    return db.collection('card_claims')
+      .where({ openid: openid })
+      .get()
+      .then(res => res.data)
+      .catch(err => {
+        console.error('检查用户领取状态失败:', err);
+        throw err;
+      });
   },
 
   // 领取卡片
   claimCard: (openid, cardCode) => {
-    return request({
-      url: '/card_claims',
-      method: 'POST',
-      data: {
-        openid: openid,
-        card_code: cardCode
-      }
-    });
+    return db.collection('card_claims')
+      .add({
+        data: {
+          openid: openid,
+          card_code: cardCode,
+          created_at: db.serverDate()
+        }
+      })
+      .catch(err => {
+        console.error('创建领取记录失败:', err);
+        throw err;
+      });
   },
 
   // 更新卡片状态
   updateCardStatus: (code, status, openid) => {
-    return request({
-      url: `/gift_cards?code=eq.${code}`,
-      method: 'PATCH',
-      data: {
-        status: status,
-        claimed_by: openid,
-        claimed_at: new Date().toISOString()
-      }
-    });
+    return db.collection('gift_cards')
+      .where({ code: code })
+      .update({
+        data: {
+          status: status,
+          claimed_by: openid,
+          claimed_at: db.serverDate()
+        }
+      })
+      .catch(err => {
+        console.error('更新卡片状态失败:', err);
+        throw err;
+      });
   },
 
   // 创建或更新用户
   upsertUser: (userInfo) => {
-    return request({
-      url: '/wx_users',
-      method: 'POST',
-      header: {
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      data: userInfo
-    });
+    // 云开发没有 upsert，先查后插
+    return db.collection('wx_users')
+      .where({ openid: userInfo.openid })
+      .get()
+      .then(res => {
+        if (res.data.length > 0) {
+          // 已存在，更新
+          return db.collection('wx_users')
+            .doc(res.data[0]._id)
+            .update({
+              data: {
+                nickname: userInfo.nickname,
+                avatar_url: userInfo.avatar_url,
+                updated_at: db.serverDate()
+              }
+            });
+        } else {
+          // 不存在，新增
+          return db.collection('wx_users')
+            .add({
+              data: {
+                openid: userInfo.openid,
+                nickname: userInfo.nickname,
+                avatar_url: userInfo.avatar_url,
+                created_at: db.serverDate()
+              }
+            });
+        }
+      })
+      .catch(err => {
+        console.error('保存用户失败:', err);
+        throw err;
+      });
   },
 
   // 根据openID获取用户卡片
   getCardByOpenid: (openid) => {
-    return request({
-      url: `/gift_cards?claimed_by=eq.${openid}&select=*`,
-      method: 'GET'
-    }).then(data => data && data[0] ? data[0] : null);
+    return db.collection('gift_cards')
+      .where({ 
+        claimed_by: openid,
+        status: 'claimed'
+      })
+      .get()
+      .then(res => res.data && res.data[0] ? res.data[0] : null)
+      .catch(err => {
+        console.error('获取用户卡片失败:', err);
+        return null;
+      });
   },
 
   // 根据code获取卡片
   getCardByCode: (code) => {
-    return request({
-      url: `/gift_cards?code=eq.${code}&select=*`,
-      method: 'GET'
-    }).then(data => data && data[0] ? data[0] : null);
+    return db.collection('gift_cards')
+      .where({ code: code })
+      .get()
+      .then(res => res.data && res.data[0] ? res.data[0] : null)
+      .catch(err => {
+        console.error('获取卡片失败:', err);
+        return null;
+      });
   },
 
-  // Supabase客户端（用于复杂查询）
+  // 创建兑奖记录
+  createRedeemRecord: (data) => {
+    return db.collection('redeem_records')
+      .add({
+        data: {
+          card_code: data.code,
+          openid: data.openid,
+          recipient_name: data.name,
+          recipient_phone: data.phone,
+          recipient_address: data.address,
+          remark: data.remark || '',
+          redeemed_at: db.serverDate(),
+          status: 'pending'
+        }
+      })
+      .catch(err => {
+        console.error('创建兑奖记录失败:', err);
+        throw err;
+      });
+  },
+
+  // Supabase兼容层（用于redeem.js）
   supabase: {
     from: (table) => ({
       insert: (data) => {
-        console.log(`插入 ${table}:`, data);
-        return request({
-          url: `/${table}`,
-          method: 'POST',
-          header: {
-            'Prefer': 'return=minimal' // 不返回插入的数据，提高性能
-          },
-          data: data[0] || data,
-          timeout: 15000 // 插入操作15秒超时
-        }).then(() => {
-          console.log(`插入 ${table} 成功`);
-          return { error: null };
-        }).catch(err => {
-          console.error(`插入 ${table} 失败:`, err);
-          return { error: err };
-        });
+        const record = data[0] || data;
+        return db.collection(table)
+          .add({ data: record })
+          .then(() => ({ error: null }))
+          .catch(err => ({ error: err }));
       }
     })
   }

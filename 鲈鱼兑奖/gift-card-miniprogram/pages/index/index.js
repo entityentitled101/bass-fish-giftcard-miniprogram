@@ -24,8 +24,8 @@ Page({
     if (!openid) return;
 
     try {
-      const { getCardByOpenid } = require('../../utils/api.js');
-      const card = await getCardByOpenid(openid);
+      const api = require('../../utils/api.js');
+      const card = await api.getCardByOpenid(openid);
       this.setData({ hasCard: !!card });
     } catch (err) {
       console.log('检查卡片失败:', err);
